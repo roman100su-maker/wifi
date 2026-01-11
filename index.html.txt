@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Видео</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+        video { width: 100vw; height: 100vh; object-fit: contain; }
+        .counter { position: fixed; bottom: 15px; right: 15px; color: rgba(255,255,255,0.7); 
+                  font-family: Arial; font-size: 12px; background: rgba(0,0,0,0.6); 
+                  padding: 5px 10px; border-radius: 12px; z-index: 100; }
+        .loader { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+                  width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.3);
+                  border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite;
+                  display: none; }
+        @keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="loader" id="loader"></div>
+    
+    <video id="mainVideo" controls playsinline autoplay muted>
+        <!-- Если видео называется "video.mp4" -->
+        <source src="video.mp4" type="video/mp4">
+        
+        <!-- ИЛИ если видео в формате MOV -->
+        <source src="video.mov" type="video/quicktime">
+        
+        <!-- ИЛИ если у видео другое имя -->
+        <!-- <source src="мое-видео.mp4" type="video/mp4"> -->
+        
+        Ваш браузер не поддерживает видео.
+    </video>
+    
+    <div class="counter" id="viewCounter">👁️ <span id="viewCount">0</span></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.getElementById('mainVideo');
+            const loader = document.getElementById('loader');
+            
+            // Счетчик просмотров
+            let views = localStorage.getItem('video_views') || 0;
+            views = parseInt(views) + 1;
+            localStorage.setItem('video_views', views);
+            document.getElementById('viewCount').textContent = views;
+            
+            // Загрузчик
+            video.addEventListener('waiting', () => loader.style.display = 'block');
+            video.addEventListener('canplay', () => loader.style.display = 'none');
+            video.addEventListener('playing', () => loader.style.display = 'none');
+            
+            // Разблокировка звука
+            video.addEventListener('click', () => video.muted = false);
+            
+            // Автоплей
+            video.play().catch(() => {
+                console.log('Автоплей заблокирован. Ждем клика пользователя.');
+            });
+            
+            // Полноэкранный режим
+            video.addEventListener('dblclick', function() {
+                if (!document.fullscreenElement) {
+                    video.requestFullscreen?.() || 
+                    video.webkitRequestFullscreen?.() || 
+                    video.msRequestFullscreen?.();
+                }
+            });
+            
+            // Восстановление позиции
+            window.addEventListener('beforeunload', () => {
+                localStorage.setItem('videoTime', video.currentTime);
+            });
+            
+            const savedTime = localStorage.getItem('videoTime');
+            if (savedTime) {
+                video.currentTime = parseFloat(savedTime);
+            }
+        });
+    </script>
+</body>
+</html>
